@@ -1,0 +1,97 @@
+//Arduino
+
+void setup() {
+  Serial.begin(9600);
+}
+
+void loop() {
+  //SENDS ASCII TO P5
+  int pot1 = analogRead(A0);
+  int pot2 = analogRead(A1);
+  Serial.print(pot1); //sends binary
+  Serial.print(",");
+  Serial.println(pot2);
+
+}
+//P5
+//Serial communication template originally by Arielle Hein 
+//Modified by Allison Casey 
+
+//Variables 
+var serial; //variable to hold an instance of the serial port library
+var portName = 'COM3'; //my Port
+
+var pot1 = 0; // potentiometers
+var pot2 = 0;
+var x = 0; //to control the ellipse on the screen and map the values 
+var y = 0;
+
+//build the canvas and set up serial communication 
+function setup() {
+  createCanvas(400, 400);
+  background('dodgerblue');
+
+  serial = new p5.SerialPort(); //a new instance of serial port library
+
+  //set up events for serial communication
+  serial.on('connected', serverConnected);
+  serial.on('open', portOpen);
+  serial.on('data', serialEvent);
+  serial.on('error', serialError);
+  serial.on('close', portClose);
+
+  //open our serial port
+  serial.open(portName);
+
+}
+
+//from arduino etch a sketch 
+function draw() {
+  //limit values to the size of the canvas while keeping in mind the size 		of the ellipse
+  x = map(pot1, 0, 1023, 10, 390);
+  y = map(pot2, 0, 1023, 10, 390);
+  //ellipse
+  fill(random(255),random(255),random(255));
+  ellipse(x, y, 20, 20);
+}
+
+//callback funcitons
+
+function serverConnected(){
+	console.log('connected to the server');
+}
+
+function portOpen(){
+  console.log('the serial port opened!');
+}
+
+//THIS IS WHERE WE RECEIVE DATA!!!!!!
+function serialEvent(){
+	//receive serial data 
+  var incomingString = serial.readLine();
+  //split the strin at the comma and put the values into pot 1 and 2
+  if(incomingString.length > 0){
+    var sensorArray = split(incomingString, ",");
+    
+    pot1 = Number(sensorArray[0]);
+    pot2 = Number(sensorArray[1]);
+  }  
+}
+
+function serialError(err){
+  console.log('something went wrong with the port. ' + err);
+}
+
+function portClose(){
+  console.log('the port was closed');
+}
+
+// get the list of ports:
+function printList(portList) {
+ // portList is an array of serial port names
+ for (var i = 0; i < portList.length; i++) {
+ // Display the list the console:
+ print(i + " " + portList[i]);
+ }
+}
+
